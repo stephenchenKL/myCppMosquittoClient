@@ -7,19 +7,7 @@
 #include <chrono>
 #include <iostream>
 #include <functional>
-// #include "../../BLIDataSvc/common.h" // BindingDataPoint
 
-struct BindingDataPoint{
-    unsigned int channel;	// channel id
-    unsigned int cycle;		// cycle number
-    unsigned int time;		// timestamp in ms since start of scan
-    float value;			// binding shift in nm
-};
-
-struct SpectraDataPoint{
-    unsigned int time;
-    float values[4000];
-};
 
 /**
  * @brief MQTT data client to interface with  BLIDataSvc MQTT data server
@@ -34,6 +22,7 @@ private:
     std::unordered_map<std::string, VoidCallback_t>     table_on_cmd;
 
     void on_message(const struct mosquitto_message *message) {
+        std::cout << "on_message topic: " << message->topic << std::endl;
         std::string topic {message->topic};
         if(table_on_msg.find(topic) != table_on_msg.end()){
             table_on_msg.at(topic)(message);
@@ -58,7 +47,11 @@ public:
      * @brief register callback that will invoked upon receiving message from this topic
      * @param MessageCallback_t std::function<void(const mosquitto_message*)>
      */
-    void register_on_message(std::string topic, MessageCallback_t cb) { table_on_msg[topic] = cb; }
+    void register_on_message(std::string topic, MessageCallback_t cb) 
+    { 
+        table_on_msg[topic] = cb; 
+        std::cout << "register_on_message, topic:" << topic  << std::endl;
+    }
 
     /**
      * @brief Publish a command message and hope a DataServer answers.
