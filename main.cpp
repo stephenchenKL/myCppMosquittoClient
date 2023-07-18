@@ -12,22 +12,16 @@ void mqtt_listener(MqttDataClient& mqttDataClient)
     mqttDataClient.loop_start();
     running = true;
 
-    while (running.load()){
+    while (running){
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
     }
-
     mqttDataClient.disconnect();
     mqttDataClient.loop_stop(false);
-
-
 }
 
 
 
 int main(int argc, char *argv[])
-
-
 {   
     // Initialise the data file reading/writing library.
     mosqpp::lib_init();
@@ -97,8 +91,10 @@ int main(int argc, char *argv[])
     //mqttDataClient.loop_forever();
 
     std::thread t1(mqtt_listener, std::ref(mqttDataClient));
+    std::thread t2(mqtt_listener, std::ref(mqttDataClient));
 
     t1.join();
+    t2.join();
 
 
 
