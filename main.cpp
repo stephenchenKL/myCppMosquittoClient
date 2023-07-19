@@ -2,12 +2,18 @@
 #include <cstring>
 #include <mosquittopp.h> // lib_init, lib_cleanup
 #include <atomic>
+#include <condition_variable>
+#include <chrono>
 
 #include "MqttDataClient.hpp"
 
 std::atomic<bool> running(false);
+std::condition_variable cv;
+std::mutex cv_m;
 
-void mqtt_listener(MqttDataClient& mqttDataClient)
+using namespace std::chrono_literals;
+
+void mqtt_sub_atomic_boolean(MqttDataClient& mqttDataClient)
 {
     mqttDataClient.loop_start();
     running = true;
@@ -18,6 +24,7 @@ void mqtt_listener(MqttDataClient& mqttDataClient)
     mqttDataClient.disconnect();
     mqttDataClient.loop_stop(false);
 }
+
 
 
 
@@ -77,8 +84,9 @@ int main(int argc, char *argv[])
         std::cout << msg->retain << std::endl;
 
         if (std::strcmp( static_cast<const char*> (msg->payload), "stop") == 0){
-            std::cout << "Please Stop! \n" ;
+            std::cout << "Stopping mqtt_sub_atomic_boolean ...\n" ;
             running = false;
+
         }
         
     };
@@ -88,13 +96,12 @@ int main(int argc, char *argv[])
     mqttDataClient.register_on_message("topic_command", topic_command_cb);
 
 
-    //mqttDataClient.loop_forever();
-
-    std::thread t1(mqtt_listener, std::ref(mqttDataClient));
-    std::thread t2(mqtt_listener, std::ref(mqttDataClient));
+    std::thread t1(mqtt_sub_atomic_boolean, std::ref(mqttDataClient));
 
     t1.join();
-    t2.join();
+
+
+
 
 
 

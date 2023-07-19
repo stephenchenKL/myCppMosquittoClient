@@ -53,25 +53,5 @@ public:
         std::cout << "register_on_message, topic:" << topic  << std::endl;
     }
 
-    /**
-     * @brief Publish a command message and hope a DataServer answers.
-     * @param cmd_params vector of strings, where 1st elem is the command, and rest are the parameters
-     * @return int zero if successful, and non-zero otherwise
-     */
-    int  pub_command(std::vector<std::string> cmd_params) {
-        if(cmd_params.size() < 1)   { return 1; }
-        
-        if(table_on_cmd.find(cmd_params[0]) != table_on_cmd.end()){
-            table_on_cmd.at(cmd_params[0])();
-        }
-        
-        std::stringstream ss;
-        ss << cmd_params[0];
-        for(int i = 1; i < cmd_params.size(); i++){
-            ss << ',' << cmd_params[i];
-        }
-        std::string payload = ss.str();
-        publish(nullptr, "command", payload.size(), payload.c_str(), 2, false);
-        return 0;
-    }
+
 };
