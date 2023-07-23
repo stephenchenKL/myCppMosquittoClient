@@ -21,6 +21,7 @@ enum CMD{
 };
 
 CMD cmd = invalid;
+std::atomic<CMD> atomic_cmd(invalid);
 
 void mqtt_sub_atomic_boolean(MqttDataClient& mqttDataClient)
 {
@@ -40,20 +41,20 @@ void sensor_svr(MqttDataClient& mqttDataClient)
     std::unique_lock<std::mutex> ul(cv_m);  //lock is applied on mutex m by thread t1
     while(true){
 
-        cv.wait(ul,[] {return cmd != invalid;});  //waits until the condition becomes true
+        cv.wait(ul,[] {return atomic_cmd != invalid;});  //waits until the condition becomes true
 
-        if (cmd == quit){
+        if (atomic_cmd == quit){
             break;
         }
-        else if (cmd == read_sensor){
+        else if (atomic_cmd == read_sensor){
             std::cout << "read sensor \n";
             //clear cmd
-            cmd = invalid;
+            atomic_cmd = invalid;
         }
-        else if (cmd == reset_sensor){
+        else if (atomic_cmd == reset_sensor){
             std::cout << "reset sensor \n";
             //clear cmd
-            cmd = invalid;
+            atomic_cmd = invalid;
         }
 
 
@@ -125,17 +126,17 @@ int main(int argc, char *argv[])
 
         if (std::strcmp( static_cast<const char*> (msg->payload), "quit") == 0){
             std::cout << "command received: quit\n" ;
-            cmd = quit;
+            atomic_cmd = quit;
             cv.notify_all();
         }
         else if (std::strcmp( static_cast<const char*> (msg->payload), "read_sensor") == 0){
             std::cout << "command received: read_sensor\n" ;
-            cmd = read_sensor;
+            atomic_cmd = read_sensor;
             cv.notify_all();
         }
         else if (std::strcmp( static_cast<const char*> (msg->payload), "reset_sensor") == 0){
             std::cout << "command received: read_sensor\n" ;
-            cmd = reset_sensor;
+            atomic_cmd = reset_sensor;
             cv.notify_all();
         }
         
